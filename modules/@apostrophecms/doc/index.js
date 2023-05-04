@@ -128,9 +128,10 @@ module.exports = {
           doc.createdBy = req.user ? {
             _id: req.user._id,
             title: req.user.title || null,
-            username: req.user.username
+            username: req.user.username || null,
+            role: req.user && req.user.role,
           } : {
-            username: 'admin'
+            role: 'admin',
           };
         },
         testPermissionsAndAddIdAndCreatedAt(req, doc, options) {
