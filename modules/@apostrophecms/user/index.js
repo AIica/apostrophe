@@ -246,7 +246,7 @@ module.exports = {
       // Obtain the `aposUsersSafe` MongoDB collection as `self.safe`.
 
       async ensureSafeCollection() {
-        self.safe = await self.apos.db.collection('users');
+        self.safe = await self.apos.db.collection('aposUsersSafe');
       },
 
       // Index the safe.
