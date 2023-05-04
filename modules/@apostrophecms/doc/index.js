@@ -123,6 +123,13 @@ module.exports = {
             doc.aposLocale = doc.aposLocale || `${req.locale}:${req.mode}`;
             doc.aposMode = req.mode;
           }
+          doc.createdBY = req.user ? {
+            _id: req.user._id,
+            title: req.user.title || null,
+            username: req.user.username
+          } : {
+            username: 'admin'
+          };
         },
         testPermissionsAndAddIdAndCreatedAt(req, doc, options) {
           self.testInsertPermissions(req, doc, options);
