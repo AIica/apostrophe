@@ -123,6 +123,8 @@ module.exports = {
             doc.aposLocale = doc.aposLocale || `${req.locale}:${req.mode}`;
             doc.aposMode = req.mode;
           }
+        },
+        setCreatedBy(req, doc, options) {
           doc.createdBY = req.user ? {
             _id: req.user._id,
             title: req.user.title || null,
@@ -799,6 +801,13 @@ module.exports = {
           // (images and files), make sure public queries can still match this type
           doc.visibility = 'public';
         }
+        doc.createdBY = req.user ? {
+          _id: req.user._id,
+          title: req.user.title || null,
+          username: req.user.username
+        } : {
+          username: 'admin'
+        };
         return self.retryUntilUnique(req, doc, async function () {
           return self.db.insertOne(self.apos.util.clonePermanent(doc));
         });
