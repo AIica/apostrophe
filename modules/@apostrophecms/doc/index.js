@@ -50,7 +50,7 @@ module.exports = {
       // a 404 if you request a document you cannot edit.
       async getOne(req, _id) {
         _id = self.apos.i18n.inferIdLocaleAndMode(req, _id);
-        const doc = await self.find(req, { _id }).permission('edit').toObject();
+        const doc = await self.find(req, {_id}).permission('edit').toObject();
         if (!doc) {
           throw self.apos.error('notfound');
         }
@@ -67,11 +67,11 @@ module.exports = {
           }
           const slug = self.apos.launder.string(req.body.slug);
           const _id = self.apos.launder.id(req.body._id);
-          const criteria = { slug: slug };
+          const criteria = {slug: slug};
           if (_id) {
-            criteria._id = { $ne: _id };
+            criteria._id = {$ne: _id};
           }
-          const doc = await self.find(req, criteria).permission(false).archived(null).project({ slug: 1 }).toObject();
+          const doc = await self.find(req, criteria).permission(false).archived(null).project({slug: 1}).toObject();
           if (doc) {
             throw self.apos.error('conflict');
           } else {
@@ -106,7 +106,7 @@ module.exports = {
             _id: {
               $in: ids
             }
-          }).project({ _id: 1 }).permission('edit').toArray();
+          }).project({_id: 1}).permission('edit').toArray();
           return {
             editable: self.apos.util.orderById(ids, found).map(doc => doc._id)
           };
@@ -125,14 +125,16 @@ module.exports = {
           }
         },
         setCreatedBy(req, doc, options) {
-          doc.createdBy = req.user ? {
-            _id: req.user._id,
-            title: req.user.title || null,
-            username: req.user.username || null,
-            role: req.user && req.user.role,
-          } : {
-            role: 'admin',
-          };
+          if (!doc.createdBy) {
+            doc.createdBy = req.user ? {
+              _id: req.user._id,
+              title: req.user.title || null,
+              username: req.user.username || null,
+              role: req.user && req.user.role,
+            } : {
+              role: 'admin',
+            };
+          }
         },
         testPermissionsAndAddIdAndCreatedAt(req, doc, options) {
           self.testInsertPermissions(req, doc, options);
@@ -291,6 +293,7 @@ module.exports = {
           if (doc.aposLocale && doc.aposLocale.endsWith(':published')) {
             return cleanup('previous');
           }
+
           async function cleanup(mode) {
             const peer = await self.apos.doc.db.findOne({
               _id: doc._id.replace(/:[\w]+$/, `:${mode}`)
@@ -318,7 +321,7 @@ module.exports = {
       },
       async createSlugIndex() {
         const params = self.getSlugIndexParams();
-        return self.db.createIndex(params, { unique: true });
+        return self.db.createIndex(params, {unique: true});
       },
       getSlugIndexParams() {
         return {
@@ -351,9 +354,9 @@ module.exports = {
           relatedReverseIds: 1,
           aposLocale: 1
         }, {});
-        await self.db.createIndex({ 'advisoryLock._id': 1 }, {});
+        await self.db.createIndex({'advisoryLock._id': 1}, {});
         await self.createTextIndex();
-        await self.db.createIndex({ parkedId: 1 }, {});
+        await self.db.createIndex({parkedId: 1}, {});
         await self.db.createIndex({
           submitted: 1,
           aposLocale: 1
@@ -384,6 +387,7 @@ module.exports = {
             throw e;
           }
         }
+
         function attempt() {
           return self.db.createIndex({
             highSearchText: 'text',
@@ -483,7 +487,7 @@ module.exports = {
               spanInsert.setAttribute(telemetry.Attributes.TARGET_FUNCTION, 'insert');
               try {
                 const result = await self.insertBody(req, doc, options);
-                spanInsert.setStatus({ code: telemetry.api.SpanStatusCode.OK });
+                spanInsert.setStatus({code: telemetry.api.SpanStatusCode.OK});
                 return result;
               } catch (e) {
                 telemetry.handleError(spanInsert, e);
@@ -496,8 +500,8 @@ module.exports = {
             await m.emit('afterInsert', req, doc, options);
             await m.emit('afterSave', req, doc, options);
             // TODO: Remove `afterLoad` in next major version. Deprecated.
-            await m.emit('afterLoad', req, [ doc ]);
-            span.setStatus({ code: telemetry.api.SpanStatusCode.OK });
+            await m.emit('afterLoad', req, [doc]);
+            span.setStatus({code: telemetry.api.SpanStatusCode.OK});
             return doc;
           } catch (err) {
             telemetry.handleError(span, err);
@@ -552,7 +556,7 @@ module.exports = {
               spanUpdate.setAttribute(telemetry.Attributes.TARGET_FUNCTION, 'update');
               try {
                 const result = await self.updateBody(req, doc, options);
-                spanUpdate.setStatus({ code: telemetry.api.SpanStatusCode.OK });
+                spanUpdate.setStatus({code: telemetry.api.SpanStatusCode.OK});
                 return result;
               } catch (e) {
                 telemetry.handleError(spanUpdate, e);
@@ -565,8 +569,8 @@ module.exports = {
             await m.emit('afterUpdate', req, doc, options);
             await m.emit('afterSave', req, doc, options);
             // TODO: Remove `afterLoad` in next major version. Deprecated.
-            await m.emit('afterLoad', req, [ doc ]);
-            span.setStatus({ code: telemetry.api.SpanStatusCode.OK });
+            await m.emit('afterLoad', req, [doc]);
+            span.setStatus({code: telemetry.api.SpanStatusCode.OK});
             return doc;
           } catch (err) {
             telemetry.handleError(span, err);
@@ -670,7 +674,7 @@ module.exports = {
           } else {
             const val = doc[key];
             if (typeof val === 'object') {
-              self.walk(val, iterator, __dotPath, _ancestors.concat([ doc ]));
+              self.walk(val, iterator, __dotPath, _ancestors.concat([doc]));
             }
           }
         }
@@ -748,7 +752,7 @@ module.exports = {
           }
         }
         const result = await self.retryUntilUnique(req, doc, async () => {
-          return self.db.replaceOne({ _id: doc._id }, self.apos.util.clonePermanent(doc));
+          return self.db.replaceOne({_id: doc._id}, self.apos.util.clonePermanent(doc));
         });
         if (manager.isLocalized(doc.type)) {
           if (doc.aposLocale.endsWith(':published')) {
@@ -813,7 +817,7 @@ module.exports = {
         if (typeof idOrCriteria === 'object') {
           return idOrCriteria;
         } else {
-          return { _id: idOrCriteria };
+          return {_id: idOrCriteria};
         }
       },
       // Is this MongoDB error related to uniqueness? Great for retrying on duplicates.
@@ -898,7 +902,7 @@ module.exports = {
         if (!tabId) {
           throw self.apos.error('invalid', 'no tabId was passed');
         }
-        let criteria = { _id };
+        let criteria = {_id};
         if (!options.force) {
           criteria.$or = [
             {
@@ -1063,6 +1067,7 @@ module.exports = {
           }
           return forSchema(manager.schema, doc);
         }
+
         function forSchema(schema, doc) {
           let needed = false;
           for (const field of schema) {
@@ -1090,7 +1095,7 @@ module.exports = {
             } else if (field.type === 'relationship') {
               doc[field.idsStorage] = (doc[field.idsStorage] || []).map(self.apos.doc.toAposDocId);
               if (field.fieldsStorage) {
-                doc[field.fieldsStorage] = Object.fromEntries(Object.entries(doc[field.fieldsStorage] || {}).map(([ key, value ]) => [ self.apos.doc.toAposDocId(key), value ]));
+                doc[field.fieldsStorage] = Object.fromEntries(Object.entries(doc[field.fieldsStorage] || {}).map(([key, value]) => [self.apos.doc.toAposDocId(key), value]));
               }
               needed = true;
             }
@@ -1140,12 +1145,14 @@ module.exports = {
         const localeNames = Object.keys(self.apos.i18n.locales);
         const criteria = [];
         self.apos.page.parked.forEach(pushParkedPageAndParkedChildren);
+
         function pushParkedPageAndParkedChildren(page) {
           criteria.push({
             parkedId: page.parkedId
           });
           (page._children || []).forEach(pushParkedPageAndParkedChildren);
         }
+
         const pieceModules = Object.values(self.apos.modules).filter(module => self.apos.instanceOf(module, '@apostrophecms/piece-type') && module.options.replicate);
         for (const module of pieceModules) {
           criteria.push({
@@ -1187,7 +1194,7 @@ module.exports = {
                 if (!existing.find(doc => doc.aposLocale === locale)) {
                   const module = self.getManager(sourceDoc.type);
                   const localized = await module.localize(req, sourceDoc, locale);
-                  await module.publish(req.clone({ locale }), localized);
+                  await module.publish(req.clone({locale}), localized);
                 }
               }
             }
@@ -1232,9 +1239,12 @@ module.exports = {
       // for each item of an array, object and relationship field type.
       walkByMetaType(doc, handlers) {
         const defaultHandlers = {
-          arrayItem: () => {},
-          object: () => {},
-          relationship: () => {}
+          arrayItem: () => {
+          },
+          object: () => {
+          },
+          relationship: () => {
+          }
         };
 
         handlers = {
@@ -1290,9 +1300,9 @@ module.exports = {
       // Add the "cacheInvalidatedAt" field to the documents that do not have it yet,
       // and set it to equal doc.updatedAt.
       setCacheField() {
-        return self.apos.migration.eachDoc({ cacheInvalidatedAt: { $exists: 0 } }, 5, async doc => {
-          await self.apos.doc.db.updateOne({ _id: doc._id }, {
-            $set: { cacheInvalidatedAt: doc.updatedAt }
+        return self.apos.migration.eachDoc({cacheInvalidatedAt: {$exists: 0}}, 5, async doc => {
+          await self.apos.doc.db.updateOne({_id: doc._id}, {
+            $set: {cacheInvalidatedAt: doc.updatedAt}
           });
         });
       },
@@ -1300,11 +1310,11 @@ module.exports = {
         self.apos.migration.add('add-cache-invalidated-at-field', self.setCacheField);
       },
 
-      async addSetPreviousDocsAposModeMigration () {
+      async addSetPreviousDocsAposModeMigration() {
         self.apos.migration.add('set-previous-docs-apos-mode', async () => {
           await self.apos.doc.db.updateMany({
-            _id: { $regex: ':previous$' },
-            aposMode: { $ne: 'previous' }
+            _id: {$regex: ':previous$'},
+            aposMode: {$ne: 'previous'}
           }, {
             $set: {
               aposMode: 'previous'
